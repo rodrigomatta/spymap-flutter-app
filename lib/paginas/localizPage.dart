@@ -101,7 +101,7 @@ class _LocalizPageState extends State<LocalizPage>
                           String uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
                           FirebaseFirestore.instance.collection(uid).doc(snapshot.data!.docs[index].id).delete();
                         },
-                        // Mostrar um ícone de exclusão vermelho e texto atrás do item deslizante
+                        // Mostrar um ícone de exclusão vermelho e texto atrás do item deslizantez
                         background: Container(color: Colors.red, child: Icon(Icons.delete), alignment: Alignment.centerRight, padding: EdgeInsets.only(right: 20),),
                         child: ListTile(
                           title: Center(child: Text("Rastreando dispositivo: ${snapshot.data!.docs[index]['name'].toString()}")), // Adicionado o widget Center aqui

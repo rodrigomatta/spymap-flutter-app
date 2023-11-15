@@ -46,8 +46,8 @@ class _ConfigPageState extends State<ConfigPage>
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Mudar tema do aplicativo',
-                  style: TextStyle(fontSize: 15),
+                  'Mudar tema do aplicativo:',
+                  style: TextStyle(fontSize: 8, fontFamily: 'MagicalChildhood'),
                 ),
                 SizedBox(width: 15),
                 Expanded( // Wrap the InputDecorator with Expanded
@@ -87,7 +87,7 @@ class _ConfigPageState extends State<ConfigPage>
                 child: OutlinedButton(
                   onPressed: () => context.read<AuthService>().logout(),
                   style: OutlinedButton.styleFrom(
-                    primary: Colors.amber,
+                    primary: Colors.amber[800],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -108,7 +108,7 @@ class _ConfigPageState extends State<ConfigPage>
                               padding: EdgeInsets.all(16),
                               child: Text(
                                 'SAIR DA CONTA',
-                                style: TextStyle(fontSize: 21),
+                                style: TextStyle(fontSize: 8, fontFamily: 'MagicalChildhood'),
                               ),
                             )
                           ],

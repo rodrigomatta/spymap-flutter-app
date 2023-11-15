@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:spymap/paginas/configPage.dart';
 import 'package:spymap/paginas/localizPage.dart';
@@ -12,13 +14,13 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-// Estado da HomePage
 class _HomePageState extends State<HomePage> {
   int indiceSelecionado = 0;
   String? userId;
   Color appBarColor = Colors.green;
   Color? bottomNavBarColor = Colors.green[800];
   late List<Widget> telas;
+  late StreamSubscription<QuerySnapshot> _subscription;
 
   @override
   void initState() {
@@ -28,14 +30,43 @@ class _HomePageState extends State<HomePage> {
       Container(), // Placeholder for MapPage
       ConfigPage(changeColor: changeColor),
     ];
+    _subscription = FirebaseFirestore.instance.collection(FirebaseAuth.instance.currentUser!.uid).snapshots().listen(_updateState);
+
+    // Load the selected theme from Firestore
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseFirestore.instance.collection('temas').doc(uid).get().then((doc) {
+      if (doc.exists) {
+        changeColor(doc.data()!['tema']);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
+  void _updateState(QuerySnapshot snapshot) {
+    if (snapshot.docs.isNotEmpty) {
+      String? newUserId = snapshot.docs.first.id;
+
+      // Verifique se o userId mudou antes de criar uma nova MapPage
+      if (newUserId != userId) {
+        setState(() {
+          userId = newUserId;
+          telas[1] = MapPage(userId!); // Substitui o placeholder pela MapPage real
+        });
+      }
+    }
   }
 
   void changeColor(String color) {
     setState(() {
       switch (color) {
         case 'Amarelo':
-          appBarColor = Colors.amber;
-          bottomNavBarColor = Colors.amber[800] ?? Colors.amber;
+          appBarColor = Colors.yellow;
+          bottomNavBarColor = Colors.yellow[500] ?? Colors.yellow;
           break;
         case 'Roxo':
           appBarColor = Colors.purple;
@@ -50,52 +81,48 @@ class _HomePageState extends State<HomePage> {
           bottomNavBarColor = Colors.green[800] ?? Colors.green;
       }
     });
+
+    // Save the selected theme to Firestore
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseFirestore.instance.collection('temas').doc(uid).set({
+      'tema': color,
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('location').snapshots(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-          userId = snapshot.data!.docs.first.id;
-          telas[1] = MapPage(userId!); // Substitui o placeholder pela MapPage real
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('SpyMap Tracker'),
-            centerTitle: true, // Centraliza o título
-            backgroundColor: appBarColor, // Altera a cor de fundo para verde
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('SpyMap Tracker'),
+        centerTitle: true, // Centraliza o título
+        backgroundColor: appBarColor, // Altera a cor de fundo para verde
+      ),
+      body: telas[indiceSelecionado],
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (indice){
+          setState(() {
+            indiceSelecionado = indice;
+          });
+        },
+        unselectedItemColor: Colors.white70,
+        backgroundColor: bottomNavBarColor,
+        currentIndex: indiceSelecionado,
+        selectedItemColor: Colors.amber[800],
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
-          body: telas[indiceSelecionado],
-          bottomNavigationBar: BottomNavigationBar(
-            onTap: (indice){
-              setState(() {
-                indiceSelecionado = indice;
-              });
-            },
-            unselectedItemColor: Colors.white70,
-            backgroundColor: bottomNavBarColor,
-            currentIndex: indiceSelecionado,
-            selectedItemColor: Colors.amber[800],
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.map_outlined),
-                label: 'Mapas',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_applications),
-                label: 'Configurações',
-              ),
-            ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map_outlined),
+            label: 'Mapas',
           ),
-        );
-      },
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_applications),
+            label: 'Configurações',
+          ),
+        ],
+      ),
     );
   }
 }
