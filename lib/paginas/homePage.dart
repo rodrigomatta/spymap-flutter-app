@@ -21,6 +21,7 @@ class _HomePageState extends State<HomePage> {
   Color? bottomNavBarColor = Colors.green[800];
   late List<Widget> telas;
   late StreamSubscription<QuerySnapshot> _subscription;
+  ValueNotifier<String> iconPathNotifier = ValueNotifier<String>('');
 
   @override
   void initState() {
@@ -55,10 +56,16 @@ class _HomePageState extends State<HomePage> {
       if (newUserId != userId) {
         setState(() {
           userId = newUserId;
-          telas[1] = MapPage(userId!); // Substitui o placeholder pela MapPage real
+          telas[1] = MapPage(userId!, iconPathNotifier); // Substitui o placeholder pela MapPage real
         });
       }
     }
+  }
+
+  void changeIcon(String path, int width) {
+    setState(() {
+      iconPathNotifier.value = path;
+    });
   }
 
   void changeColor(String color) {

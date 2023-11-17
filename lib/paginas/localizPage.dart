@@ -16,8 +16,10 @@ class _LocalizPageState extends State<LocalizPage>
     with SingleTickerProviderStateMixin {
   // Campo para armazenar as assinaturas
   Map<String, StreamSubscription<loc.LocationData>> _locationSubscriptions = {};
+
   // Instância da classe de localização
   final loc.Location location = loc.Location();
+
   // Flag de carregamento
   bool loading = false;
   String deviceId = '';
@@ -25,10 +27,13 @@ class _LocalizPageState extends State<LocalizPage>
   @override
   void initState() {
     super.initState();
+    
     // Solicitar permissão de localização ao iniciar a tela
     _requestPermission();
+    
     // Configurar as configurações de localização
     location.changeSettings(interval: 300, accuracy: loc.LocationAccuracy.high);
+    
     // Habilitar o modo de segundo plano para a localização
     location.enableBackgroundMode(enable: true);
   }
@@ -41,13 +46,8 @@ class _LocalizPageState extends State<LocalizPage>
           children: [
             // Campo de texto para o usuário inserir o ID do dispositivo
             Padding(
-              padding: 
-                EdgeInsets.only(
-                  top: 30, 
-                  left: 20, 
-                  right: 20
-                ),
-                child: TextField(
+              padding: EdgeInsets.only(top: 30, left: 20, right: 20),
+              child: TextField(
                 onChanged: (value) {
                   setState(() {
                     deviceId = value;
@@ -65,22 +65,25 @@ class _LocalizPageState extends State<LocalizPage>
               onPressed: () {
                 _getLocation(deviceId);
               },
-              child: Text("Adiconar localização atual"),
+              child: Text("Adicionar localização atual"),
             ),
+            
             // Botão para habilitar a localização em tempo real
             TextButton(
               onPressed: () {
-                _listenLocastion(deviceId);
+                _listenLocation(deviceId);
               },
               child: Text("Habilitar localização em tempo real"),
             ),
+            
             // Botão para desabilitar a localização em tempo real
-           TextButton(
+            TextButton(
               onPressed: () {
                 _stopListening(deviceId);
               },
               child: Text("Desabilitar localização em tempo real"),
             ),
+            
             // Lista de locais com base nos dados do Firestore
             Expanded(
               child: StreamBuilder(
@@ -95,24 +98,32 @@ class _LocalizPageState extends State<LocalizPage>
                       return Dismissible(
                         // Cada Dismissible deve conter uma chave única. Neste caso, usamos o ID do documento.
                         key: Key(snapshot.data!.docs[index].id),
+                        
                         // Fornecemos uma função que diz ao Flutter o que fazer depois que um item foi descartado
                         onDismissed: (direction) {
                           // Remover o item do nosso banco de dados
                           String uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
                           FirebaseFirestore.instance.collection(uid).doc(snapshot.data!.docs[index].id).delete();
                         },
-                        // Mostrar um ícone de exclusão vermelho e texto atrás do item deslizantez
-                        background: Container(color: Colors.red, child: Icon(Icons.delete), alignment: Alignment.centerRight, padding: EdgeInsets.only(right: 20),),
+                        
+                        // Mostrar um ícone de exclusão vermelho e texto atrás do item deslizante
+                        background: Container(
+                          color: Colors.red, 
+                          child: Icon(Icons.delete), 
+                          alignment: Alignment.centerRight, 
+                          padding: EdgeInsets.only(right: 20),
+                        ),
+                        
                         child: ListTile(
-                          title: Center(child: Text("Rastreando dispositivo: ${snapshot.data!.docs[index]['name'].toString()}")), // Adicionado o widget Center aqui
-                          subtitle: Center( // Adicionado o widget Center aqui
+                          title: Center(child: Text("Rastreando dispositivo: ${snapshot.data!.docs[index]['name'].toString()}")),
+                          // Adicionado o widget Center para centralizar o texto
+                          subtitle: Center(
+                            // Adicionado o widget Center para centralizar a Row
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center, // Centraliza os elementos na Row
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text("Lat: ${snapshot.data!.docs[index]['latitude'].toString()}"),
-                                SizedBox(
-                                  width: 20,
-                                ),
+                                SizedBox(width: 20),
                                 Text("Long: ${snapshot.data!.docs[index]['longitude'].toString()}"),
                               ],
                             ),
@@ -129,7 +140,8 @@ class _LocalizPageState extends State<LocalizPage>
       ),
     );
   }
-   // Método para obter a localização e salvar no Firestore
+
+  // Método para obter a localização e salvar no Firestore
   _getLocation(String deviceId) async {
     try {
       // Verificar a permissão de localização
@@ -151,19 +163,19 @@ class _LocalizPageState extends State<LocalizPage>
   }
 
   // Método para iniciar a escuta da localização em tempo real
-  Future<void> _listenLocastion(String deviceId) async {
+  Future<void> _listenLocation(String deviceId) async {
     _locationSubscriptions[deviceId] = location.onLocationChanged.handleError((onError) {
       print("Erro: $onError");
       _locationSubscriptions[deviceId]?.cancel();
       setState(() {
         _locationSubscriptions.remove(deviceId);
       });
-    }).listen((loc.LocationData currentlocation) async {
+    }).listen((loc.LocationData currentLocation) async {
       // Atualizar a localização no Firestore durante a escuta
       String uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
       await FirebaseFirestore.instance.collection(uid).doc(deviceId).set({ 
-        'latitude': currentlocation.latitude,
-        'longitude': currentlocation.longitude,
+        'latitude': currentLocation.latitude,
+        'longitude': currentLocation.longitude,
         'name': deviceId
       }, SetOptions(merge: true));
     });
@@ -181,7 +193,7 @@ class _LocalizPageState extends State<LocalizPage>
   _requestPermission() async {
     var status = await Permission.location.request();
     if (status.isGranted) {
-      print("Concluido");
+      print("Concluído");
     } else if (status.isPermanentlyDenied) {
       // Abrir configurações do aplicativo se a permissão for negada permanentemente
       openAppSettings();

@@ -1,256 +1,265 @@
 import 'package:flutter/material.dart';
-import 'package:spymap/widgets/authCheck.dart';
+import 'package:spymap/widgets/authCheck.dart'; // Import do widget de verificação de autenticação
+import 'package:math_expressions/math_expressions.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:spymap/widgets/calcButton.dart';
 
+// Definindo a classe CalculatorFakePage que é um StatefulWidget
 class CalculatorFakePage extends StatefulWidget {
-  const CalculatorFakePage({Key? key});
+  const CalculatorFakePage({required Key key}) : super(key: key);
 
   @override
-  State<CalculatorFakePage> createState() => _CalculatorFakePageState();
+  CalculatorFakePageState createState() => CalculatorFakePageState();
 }
 
-class _CalculatorFakePageState extends State<CalculatorFakePage> {
-  // Função para criar um botão da calculadora
-  Widget botaoCalculadora(String textoBotao, Color corBotao, Color corTexto) {
-    return Container(
-      child: ElevatedButton(
-        onPressed: () {
-          // TODO: Adicionar lógica para pressionar o botão
-          calculo(textoBotao);
-        },
-        child: Text(
-          textoBotao,
-          style: TextStyle(
-            fontSize: 35,
-            color: corTexto,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          primary: corBotao, // Cor de fundo do botão
-          shape: CircleBorder(),
-          padding: EdgeInsets.all(20),
-        ),
-      ),
-    );
+// Estado da página da calculadora
+class CalculatorFakePageState extends State<CalculatorFakePage> {
+  // Variáveis para armazenar o histórico e a expressão atual
+  String _historico = ''; // Histórico de expressões
+  String _expressao = ''; // Expressão atual sendo construída
+
+  // Função chamada ao clicar nos botões numéricos e de operação
+  void clicarNumero(String texto) {
+    // Verificando se o texto é '%' e a expressão é '53105' para redirecionar para a tela de autenticação
+    if (texto == '%' && _expressao == '53105') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AuthCheck()),
+      );
+    } else {
+      // Adicionando o texto à expressão atual
+      setState(() => _expressao += texto);
+    }
   }
 
+  // Função chamada ao clicar no botão "AC" (All Clear)
+  void limparTudo(String texto) {
+    // Limpando tanto o histórico quanto a expressão atual
+    setState(() {
+      _historico = '';
+      _expressao = '';
+    });
+  }
+
+  // Função chamada ao clicar no botão "C" (Clear)
+  void limpar(String texto) {
+    // Limpando apenas a expressão atual
+    setState(() {
+      _expressao = '';
+    });
+  }
+
+  // Função chamada ao clicar no botão "=" (Igual)
+  void avaliar(String texto) {
+    // Criando um parser e um contexto para avaliar a expressão matemática
+    Parser p = Parser();
+    ContextModel cm = ContextModel();
+
+    try {
+      // Verificando se a expressão não está vazia
+      if (_expressao.isNotEmpty) {
+        // Fazendo o parsing e avaliação da expressão
+        Expression exp = p.parse(_expressao);
+
+        setState(() {
+          // Atualizando o histórico e a expressão atual
+          _historico = _expressao;
+          _expressao = exp.evaluate(EvaluationType.REAL, cm).toString();
+        });
+      } else {
+        // Tratar o caso em que a expressão está vazia
+        print('Expressão está vazia');
+      }
+    } catch (e) {
+      // Tratar erro de parsing
+      print('Erro ao analisar a expressão: $e');
+    }
+  }
+
+  // Método build para construir a interface da página
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text('Calculadora'),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF283637),
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 5),
+      backgroundColor: const Color(0xFF283637),
+      body: Container(
+        padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // Tela da calculadora
-            SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      textoTela,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 100,
-                      ),
+          children: <Widget>[
+            // Exibindo o histórico no canto inferior direito
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Text(
+                  _historico,
+                  style: GoogleFonts.rubik(
+                    textStyle: TextStyle(
+                      fontSize: 24,
+                      color: const Color(0xFF545F61),
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Botões de operações
-                      botaoCalculadora('AC', Colors.grey, Colors.black),
-                      botaoCalculadora('+/-', Colors.grey, Colors.black),
-                      botaoCalculadora('%', Colors.grey, Colors.black),
-                      botaoCalculadora('/', Colors.amber[700]!, Colors.white),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      botaoCalculadora('7', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('8', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('9', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('x', Colors.amber[700]!, Colors.white),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      botaoCalculadora('4', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('5', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('6', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('-', Colors.amber[700]!, Colors.white),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      botaoCalculadora('1', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('2', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('3', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('+', Colors.amber[700]!, Colors.white),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Botão 0
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.grey[850], // Cor de fundo do botão
-                          shape: StadiumBorder(),
-                          padding: EdgeInsets.fromLTRB(34, 20, 128, 20),
-                        ),
-                        onPressed: () {
-                          // Lógica do botão 0
-                          calculo('0');
-                        },
-                        child: Text(
-                          "0",
-                          style: TextStyle(
-                            fontSize: 35,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      botaoCalculadora(',', Colors.grey[850]!, Colors.white),
-                      botaoCalculadora('=', Colors.grey[700]!, Colors.white),
-                    ],
-                  )
-                ],
+                ),
               ),
+            ),
+            // Exibindo a expressão atual no canto inferior direito
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  _expressao,
+                  style: GoogleFonts.rubik(
+                    textStyle: TextStyle(
+                      fontSize: 48,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            // Linhas de botões organizados em filas
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                // Botão "AC"
+                BotaoCalculadora(
+                  texto: 'AC',
+                  preenchimentoCor: 0xFF6C807F,
+                  tamanhoTexto: 20,
+                  funcaoCallback: limparTudo,
+                ),
+                // Botão "C"
+                BotaoCalculadora(
+                  texto: 'C',
+                  preenchimentoCor: 0xFF6C807F,
+                  funcaoCallback: limpar,
+                ),
+                // Botão "%"
+                BotaoCalculadora(
+                  texto: '%',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  funcaoCallback: clicarNumero,
+                ),
+                // Botão "/"
+                BotaoCalculadora(
+                  texto: '/',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  funcaoCallback: clicarNumero,
+                ),
+              ],
+            ),
+            // Linha de botões numéricos e operadores
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                // Botões numéricos de 7 a 9 e operador "*"
+                BotaoCalculadora(
+                  texto: '7',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '8',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '9',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '*',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  tamanhoTexto: 24,
+                  funcaoCallback: clicarNumero,
+                ),
+              ],
+            ),
+            // Linha de botões numéricos de 4 a 6 e operador "-"
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                BotaoCalculadora(
+                  texto: '4',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '5',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '6',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '-',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  tamanhoTexto: 38,
+                  funcaoCallback: clicarNumero,
+                ),
+              ],
+            ),
+            // Linha de botões numéricos de 1 a 3 e operador "+"
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                BotaoCalculadora(
+                  texto: '1',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '2',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '3',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '+',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  tamanhoTexto: 30,
+                  funcaoCallback: clicarNumero,
+                ),
+              ],
+            ),
+            // Linha de botões "." , "0", "00" e "="
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                BotaoCalculadora(
+                  texto: '.',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '0',
+                  funcaoCallback: clicarNumero,
+                ),
+                BotaoCalculadora(
+                  texto: '00',
+                  funcaoCallback: clicarNumero,
+                  tamanhoTexto: 26,
+                ),
+                BotaoCalculadora(
+                  texto: '=',
+                  preenchimentoCor: 0xFFFFFFFF,
+                  corTexto: 0xFF65BDAC,
+                  funcaoCallback: avaliar,
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  // Lógica da calculadora
-  dynamic textoTela = '0';
-  double numeroUm = 0;
-  double numeroDois = 0;
-
-  dynamic resultado = '';
-  dynamic resultadoFinal = '';
-  dynamic operacao = '';
-  dynamic operacaoAnterior = '';
-
-  void calculo(textoBotao) {
-    if (textoBotao == 'AC') {
-      textoTela = '0';
-      numeroUm = 0;
-      numeroDois = 0;
-      resultado = '';
-      resultadoFinal = '0';
-      operacao = '';
-      operacaoAnterior = '';
-    } else if (operacao == '=' && textoBotao == '=') {
-      if (operacaoAnterior == '+') {
-        resultadoFinal = somar();
-      } else if (operacaoAnterior == '-') {
-        resultadoFinal = subtrair();
-      } else if (operacaoAnterior == 'x') {
-        resultadoFinal = multiplicar();
-      } else if (operacaoAnterior == '/') {
-        resultadoFinal = dividir();
-      }
-    } else if (textoBotao == '+' || textoBotao == '-' || textoBotao == 'x' || textoBotao == '/' || textoBotao == '=') {
-      if (numeroUm == 0) {
-        numeroUm = double.parse(resultado.replaceAll(',', '.'));
-      } else {
-        numeroDois = double.parse(resultado.replaceAll(',', '.'));
-      }
-
-      if (operacao == '+') {
-        resultadoFinal = somar();
-      } else if (operacao == '-') {
-        resultadoFinal = subtrair();
-      } else if (operacao == 'x') {
-        resultadoFinal = multiplicar();
-      } else if (operacao == '/') {
-        resultadoFinal = dividir();
-      }
-      operacaoAnterior = operacao;
-      operacao = textoBotao;
-      resultado = '';
-    } else if (textoBotao == '%') {
-      if (resultado == '53105') {
-        // Redirecionar para AuthCheck em caso de condição específica
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AuthCheck()),
-        );
-      } else {
-        if (double.tryParse(resultado) != null) {
-          resultado = (numeroUm / 100).toString();
-          resultadoFinal = contemDecimal(resultado);
-        } else {
-          // Exibir Snackbar em caso de erro
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro: valor inválido para porcentagem')),
-          );
-        }
-      }
-    } else if (textoBotao == '.') {
-      if (!resultado.toString().contains('.')) {
-        resultado = resultado.toString() + '.';
-      }
-      resultadoFinal = resultado;
-    } else if (textoBotao == '+/-') {
-      resultado.toString().startsWith('-') ? resultado = resultado.toString().substring(1) : resultado = '-' + resultado.toString();
-      resultadoFinal = resultado;
-    } else {
-      resultado = resultado + textoBotao;
-      resultadoFinal = resultado;
-    }
-    setState(() {
-      textoTela = resultadoFinal;
-    });
-  }
-
-  String somar() {
-    resultado = (numeroUm + numeroDois).toString();
-    numeroUm = double.parse(resultado);
-    return contemDecimal(resultado);
-  }
-
-  String subtrair() {
-    resultado = (numeroUm - numeroDois).toString();
-    numeroUm = double.parse(resultado);
-    return contemDecimal(resultado);
-  }
-
-  String multiplicar() {
-    resultado = (numeroUm * numeroDois).toString();
-    numeroUm = double.parse(resultado);
-    return contemDecimal(resultado);
-  }
-
-  String dividir() {
-    resultado = (numeroUm / numeroDois).toString();
-    numeroUm = double.parse(resultado);
-    return contemDecimal(resultado);
-  }
-
-  String contemDecimal(resultado) {
-    if (resultado.toString().contains('.')) {
-      List<String> splitDecimal = resultado.toString().split('.');
-      if (!(int.parse(splitDecimal[1]) > 0)) resultado = splitDecimal[0].toString();
-    }
-    return resultado.toString().replaceAll('.', ',');
   }
 }

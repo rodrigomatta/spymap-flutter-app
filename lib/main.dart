@@ -15,8 +15,7 @@ void main() async { // Função principal que é o ponto de entrada do aplicativ
         ChangeNotifierProvider(create: (context) => AuthService()), // Fornece o serviço de autenticação para o aplicativo
       ],
       child: MaterialApp( // Cria o aplicativo com Material Design
-        //home: AuthCheck(), // Define AuthCheck como a primeira tela do aplicativo
-        home: CalculatorFakePage(),
+        home: CalculatorFakePage(key: UniqueKey()), // Define AuthCheck como a primeira tela do aplicativo
         debugShowCheckedModeBanner: false, // Remove o banner de modo de depuração
       )
     )
