@@ -32,7 +32,8 @@ class _LocalizPageState extends State<LocalizPage>
     _requestPermission();
     
     // Configurar as configurações de localização
-    location.changeSettings(interval: 300, accuracy: loc.LocationAccuracy.high);
+    //location.changeSettings(interval: 300, accuracy: loc.LocationAccuracy.high);
+    location.changeSettings(interval: 1000, accuracy: loc.LocationAccuracy.balanced);
     
     // Habilitar o modo de segundo plano para a localização
     location.enableBackgroundMode(enable: true);

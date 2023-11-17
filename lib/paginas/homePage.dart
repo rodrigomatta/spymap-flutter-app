@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
     // Load the selected theme from Firestore
     String uid = FirebaseAuth.instance.currentUser!.uid;
     FirebaseFirestore.instance.collection('temas').doc(uid).get().then((doc) {
-      if (doc.exists) {
+      if (doc.exists && doc.data()!['tema'] != null) {
         changeColor(doc.data()!['tema']);
       }
     });
@@ -52,11 +52,16 @@ class _HomePageState extends State<HomePage> {
     if (snapshot.docs.isNotEmpty) {
       String? newUserId = snapshot.docs.first.id;
 
-      // Verifique se o userId mudou antes de criar uma nova MapPage
+      // Check if the added document is the 'temas' document
+      if (newUserId == 'temas') {
+        return;
+      }
+
+      // Check if the userId has changed before creating a new MapPage
       if (newUserId != userId) {
         setState(() {
           userId = newUserId;
-          telas[1] = MapPage(userId!, iconPathNotifier); // Substitui o placeholder pela MapPage real
+          telas[1] = MapPage(userId!, iconPathNotifier); // Replace the placeholder with the actual MapPage
         });
       }
     }

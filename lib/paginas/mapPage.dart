@@ -30,9 +30,23 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     
-    // Adiciona um listener ao notifier para atualizar o ícone quando houver alterações
-    widget.iconPathNotifier.addListener(() {
-      changeIcon(widget.iconPathNotifier.value, 200);
+    // Load the selected marker from Firestore
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseFirestore.instance.collection('temas').doc(uid).get().then((doc) {
+      if (doc.exists && doc.data()!['marcador'] != null) {
+        iconeCustomizadoCarregamento(doc.data()!['marcador'], 250).then((customIcon) {
+          setState(() {
+            iconeCustomizado = customIcon;
+          });
+        });
+      } else {
+        // Load the default marker if 'marcador' is null
+        iconeCustomizadoCarregamento('images/pontoazul.png', 200).then((customIcon) {
+          setState(() {
+            iconeCustomizado = customIcon;
+          });
+        });
+      }
     });
   }
 
@@ -42,7 +56,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   // Método para carregar o ícone customizado
-  Future<void> iconeCustomizadoCarregamento(String path, int width) async {
+  Future<BitmapDescriptor> iconeCustomizadoCarregamento(String path, int width) async {
     final ByteData data = await rootBundle.load(path);
     final ui.Codec codec = await ui.instantiateImageCodec(
       data.buffer.asUint8List(),
@@ -50,7 +64,7 @@ class _MapPageState extends State<MapPage> {
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
     final byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-    iconeCustomizado = BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
   @override

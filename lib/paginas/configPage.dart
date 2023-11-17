@@ -1,4 +1,6 @@
 // Importando os pacotes necessários do Flutter
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:spymap/servicos/authService.dart';
 import 'package:provider/provider.dart';
@@ -118,6 +120,11 @@ class _ConfigPageState extends State<ConfigPage> with SingleTickerProviderStateM
                                 if (widget.changeIcon != null) {
                                   widget.changeIcon!(newValue, 200);
                                 }
+                                // Salva o marcador personalizado selecionado no Firestore
+                                String uid = FirebaseAuth.instance.currentUser!.uid;
+                                FirebaseFirestore.instance.collection('temas').doc(uid).set({
+                                  'marcador': newValue,
+                                }, SetOptions(merge: true));
                               });
                             },
                             items: listPoints.map<DropdownMenuItem<String>>((String value) {
