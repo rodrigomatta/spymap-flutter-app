@@ -6,22 +6,22 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
 
-class MapPage extends StatefulWidget {
-  final String user_id;
-  final ValueNotifier<String> iconPathNotifier;
+class PaginaMapa extends StatefulWidget {
+  final String idUsuario; // ID do usuário
+  final ValueNotifier<String> notificadorCaminhoIcone; // Notificador para o caminho do ícone
 
-  MapPage(this.user_id, this.iconPathNotifier);
+  PaginaMapa(this.idUsuario, this.notificadorCaminhoIcone);
 
   @override
-  _MapPageState createState() => _MapPageState();
+  _PaginaMapaState createState() => _PaginaMapaState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _PaginaMapaState extends State<PaginaMapa> {
   // Objeto de localização
-  final loc.Location location = loc.Location();
+  final loc.Location localizacao = loc.Location();
 
   // Controlador do GoogleMap
-  late GoogleMapController _controller;
+  late GoogleMapController _controlador;
 
   // Variável para armazenar o ícone customizado do marcador
   BitmapDescriptor? iconeCustomizado;
@@ -30,20 +30,21 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     
-    // Load the selected marker from Firestore
+    // Carrega o marcador selecionado do Firestore
     String uid = FirebaseAuth.instance.currentUser!.uid;
-    FirebaseFirestore.instance.collection('temas').doc(uid).get().then((doc) {
-      if (doc.exists && doc.data()!['marcador'] != null) {
-        iconeCustomizadoCarregamento(doc.data()!['marcador'], 250).then((customIcon) {
+    FirebaseFirestore.instance.collection('temas').doc(uid).get().then((documento) {
+      if (documento.exists && documento.data()!['marcador'] != null) {
+        // Carrega o ícone customizado com o caminho fornecido
+        carregarIconeCustomizado(documento.data()!['marcador'], 300).then((iconeCustomizadoCarregado) {
           setState(() {
-            iconeCustomizado = customIcon;
+            iconeCustomizado = iconeCustomizadoCarregado;
           });
         });
       } else {
-        // Load the default marker if 'marcador' is null
-        iconeCustomizadoCarregamento('images/pontoazul.png', 200).then((customIcon) {
+        // Carrega o ícone padrão se 'marcador' for nulo
+        carregarIconeCustomizado('images/pontoazul.png', 250).then((iconeCustomizadoCarregado) {
           setState(() {
-            iconeCustomizado = customIcon;
+            iconeCustomizado = iconeCustomizadoCarregado;
           });
         });
       }
@@ -51,16 +52,18 @@ class _MapPageState extends State<MapPage> {
   }
 
   // Método para mudar o ícone do marcador
-  void changeIcon(String path, int width) {
-    iconeCustomizadoCarregamento(path, width);
+  void alterarIcone(String caminho, int largura) {
+    // Atualiza o ícone customizado com o novo caminho
+    carregarIconeCustomizado(caminho, largura);
   }
 
   // Método para carregar o ícone customizado
-  Future<BitmapDescriptor> iconeCustomizadoCarregamento(String path, int width) async {
-    final ByteData data = await rootBundle.load(path);
+  Future<BitmapDescriptor> carregarIconeCustomizado(String caminho, int largura) async {
+    // Carrega o ícone customizado a partir do caminho fornecido
+    final ByteData dados = await rootBundle.load(caminho);
     final ui.Codec codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-      targetWidth: width,
+      dados.buffer.asUint8List(),
+      targetWidth: largura,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
     final byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
@@ -114,7 +117,7 @@ class _MapPageState extends State<MapPage> {
               ),
               onMapCreated: (GoogleMapController controller) async {
                 setState(() {
-                  _controller = controller;
+                  _controlador = controller;
                 });
               },
             );
@@ -127,11 +130,12 @@ class _MapPageState extends State<MapPage> {
   }
 
   // Método para movimentar a câmera para a posição do usuário específico
-  Future<void> MapPage(AsyncSnapshot<QuerySnapshot> snapshot) async {
-    if (snapshot.data!.docs.any((element) => element.id == widget.user_id)) {
-      var doc = snapshot.data!.docs.firstWhere((element) => element.id == widget.user_id);
+  Future<void> moverCameraParaUsuario(AsyncSnapshot<QuerySnapshot> snapshot) async {
+    if (snapshot.data!.docs.any((element) => element.id == widget.idUsuario)) {
+      var doc = snapshot.data!.docs.firstWhere((element) => element.id == widget.idUsuario);
 
-      await _controller.animateCamera(
+      // Anima a câmera para a posição do usuário
+      await _controlador.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(

@@ -4,12 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Definindo a classe BotaoCalculadora que é um StatelessWidget
 class BotaoCalculadora extends StatelessWidget {
-  // Declarando os parâmetros necessários para a construção do botão
   final String texto;
-  final int preenchimentoCor;
-  final int corTexto;
-  final double tamanhoTexto;
-  final Function(String) funcaoCallback;
+  final int preenchimentoCor; // Cor de preenchimento do botão
+  final int corTexto; // Cor do texto do botão
+  final double tamanhoTexto; // Tamanho do texto do botão
+  final Function(String) funcaoCallback; // Função de retorno de chamada quando o botão é pressionado
 
   // Construtor da classe
   const BotaoCalculadora({
@@ -41,9 +40,9 @@ class BotaoCalculadora extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(50.0),
             ),
-            // Definindo a cor de fundo com base no parâmetro preenchimentoCor
+            // Definindo a cor de fundo com base no parâmetro corDePreenchimento
             backgroundColor: preenchimentoCor != 0 ? Color(preenchimentoCor) : null,
-            // Definindo a cor do texto com base no parâmetro corTexto
+            // Definindo a cor do texto com base no parâmetro corDoTexto
             primary: Color(corTexto),
           ),
           // Definindo a ação a ser executada quando o botão é pressionado

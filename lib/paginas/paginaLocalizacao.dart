@@ -5,38 +5,37 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart' as loc;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LocalizPage extends StatefulWidget {
-  const LocalizPage({super.key});
+class PaginaLocalizacao extends StatefulWidget {
+  const PaginaLocalizacao({super.key});
 
   @override
-  State<LocalizPage> createState() => _LocalizPageState();
+  State<PaginaLocalizacao> createState() => _PaginaLocalizacaoState();
 }
 
-class _LocalizPageState extends State<LocalizPage>
+class _PaginaLocalizacaoState extends State<PaginaLocalizacao>
     with SingleTickerProviderStateMixin {
   // Campo para armazenar as assinaturas
-  Map<String, StreamSubscription<loc.LocationData>> _locationSubscriptions = {};
+  Map<String, StreamSubscription<loc.LocationData>> _assinaturasLocalizacao = {};
 
   // Instância da classe de localização
-  final loc.Location location = loc.Location();
+  final loc.Location localizacao = loc.Location();
 
   // Flag de carregamento
-  bool loading = false;
-  String deviceId = '';
+  bool carregando = false;
+  String idDispositivo = '';
 
   @override
   void initState() {
     super.initState();
-    
+
     // Solicitar permissão de localização ao iniciar a tela
-    _requestPermission();
-    
+    _solicitarPermissao();
+
     // Configurar as configurações de localização
-    //location.changeSettings(interval: 300, accuracy: loc.LocationAccuracy.high);
-    location.changeSettings(interval: 1000, accuracy: loc.LocationAccuracy.balanced);
-    
+    localizacao.changeSettings(interval: 1000, accuracy: loc.LocationAccuracy.balanced);
+
     // Habilitar o modo de segundo plano para a localização
-    location.enableBackgroundMode(enable: true);
+    localizacao.enableBackgroundMode(enable: true);
   }
 
   @override
@@ -49,9 +48,9 @@ class _LocalizPageState extends State<LocalizPage>
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
               child: TextField(
-                onChanged: (value) {
+                onChanged: (valor) {
                   setState(() {
-                    deviceId = value;
+                    idDispositivo = valor;
                   });
                 },
                 decoration: InputDecoration(
@@ -60,31 +59,31 @@ class _LocalizPageState extends State<LocalizPage>
                 ),
               ),
             ),
-            
+
             // Botão para obter a localização atual
             TextButton(
               onPressed: () {
-                _getLocation(deviceId);
+                _obterLocalizacaoAtual(idDispositivo);
               },
               child: Text("Adicionar localização atual"),
             ),
-            
+
             // Botão para habilitar a localização em tempo real
             TextButton(
               onPressed: () {
-                _listenLocation(deviceId);
+                _escutarLocalizacao(idDispositivo);
               },
               child: Text("Habilitar localização em tempo real"),
             ),
-            
+
             // Botão para desabilitar a localização em tempo real
             TextButton(
               onPressed: () {
-                _stopListening(deviceId);
+                _pararEscuta(idDispositivo);
               },
               child: Text("Desabilitar localização em tempo real"),
             ),
-            
+
             // Lista de locais com base nos dados do Firestore
             Expanded(
               child: StreamBuilder(
@@ -99,22 +98,22 @@ class _LocalizPageState extends State<LocalizPage>
                       return Dismissible(
                         // Cada Dismissible deve conter uma chave única. Neste caso, usamos o ID do documento.
                         key: Key(snapshot.data!.docs[index].id),
-                        
+
                         // Fornecemos uma função que diz ao Flutter o que fazer depois que um item foi descartado
-                        onDismissed: (direction) {
+                        onDismissed: (direcao) {
                           // Remover o item do nosso banco de dados
                           String uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
                           FirebaseFirestore.instance.collection(uid).doc(snapshot.data!.docs[index].id).delete();
                         },
-                        
+
                         // Mostrar um ícone de exclusão vermelho e texto atrás do item deslizante
                         background: Container(
-                          color: Colors.red, 
-                          child: Icon(Icons.delete), 
-                          alignment: Alignment.centerRight, 
+                          color: Colors.red,
+                          child: Icon(Icons.delete),
+                          alignment: Alignment.centerRight,
                           padding: EdgeInsets.only(right: 20),
                         ),
-                        
+
                         child: ListTile(
                           title: Center(child: Text("Rastreando dispositivo: ${snapshot.data!.docs[index]['name'].toString()}")),
                           // Adicionado o widget Center para centralizar o texto
@@ -143,16 +142,16 @@ class _LocalizPageState extends State<LocalizPage>
   }
 
   // Método para obter a localização e salvar no Firestore
-  _getLocation(String deviceId) async {
+  _obterLocalizacaoAtual(String idDispositivo) async {
     try {
       // Verificar a permissão de localização
-      loc.PermissionStatus permission = await location.hasPermission();
-      if (permission == loc.PermissionStatus.granted) {
-        final loc.LocationData _locationResult = await location.getLocation();
-        await FirebaseFirestore.instance.collection(FirebaseAuth.instance.currentUser!.uid).doc(deviceId).set({
-          'latitude': _locationResult.latitude,
-          'longitude': _locationResult.longitude,
-          'name': deviceId
+      loc.PermissionStatus permissao = await localizacao.hasPermission();
+      if (permissao == loc.PermissionStatus.granted) {
+        final loc.LocationData _resultadoLocalizacao = await localizacao.getLocation();
+        await FirebaseFirestore.instance.collection(FirebaseAuth.instance.currentUser!.uid).doc(idDispositivo).set({
+          'latitude': _resultadoLocalizacao.latitude,
+          'longitude': _resultadoLocalizacao.longitude,
+          'name': idDispositivo
         }, SetOptions(merge: true));
       } else {
         // Tratar caso a permissão não esteja concedida
@@ -164,34 +163,34 @@ class _LocalizPageState extends State<LocalizPage>
   }
 
   // Método para iniciar a escuta da localização em tempo real
-  Future<void> _listenLocation(String deviceId) async {
-    _locationSubscriptions[deviceId] = location.onLocationChanged.handleError((onError) {
-      print("Erro: $onError");
-      _locationSubscriptions[deviceId]?.cancel();
+  Future<void> _escutarLocalizacao(String idDispositivo) async {
+    _assinaturasLocalizacao[idDispositivo] = localizacao.onLocationChanged.handleError((erro) {
+      print("Erro: $erro");
+      _assinaturasLocalizacao[idDispositivo]?.cancel();
       setState(() {
-        _locationSubscriptions.remove(deviceId);
+        _assinaturasLocalizacao.remove(idDispositivo);
       });
-    }).listen((loc.LocationData currentLocation) async {
+    }).listen((loc.LocationData localizacaoAtual) async {
       // Atualizar a localização no Firestore durante a escuta
       String uid = FirebaseAuth.instance.currentUser?.uid ?? 'default';
-      await FirebaseFirestore.instance.collection(uid).doc(deviceId).set({ 
-        'latitude': currentLocation.latitude,
-        'longitude': currentLocation.longitude,
-        'name': deviceId
+      await FirebaseFirestore.instance.collection(uid).doc(idDispositivo).set({
+        'latitude': localizacaoAtual.latitude,
+        'longitude': localizacaoAtual.longitude,
+        'name': idDispositivo
       }, SetOptions(merge: true));
     });
   }
 
   // Método para parar a escuta da localização em tempo real
-  _stopListening(String deviceId) {
-    _locationSubscriptions[deviceId]?.cancel();
+  _pararEscuta(String idDispositivo) {
+    _assinaturasLocalizacao[idDispositivo]?.cancel();
     setState(() {
-      _locationSubscriptions.remove(deviceId);
+      _assinaturasLocalizacao.remove(idDispositivo);
     });
   }
 
   // Método para solicitar permissão de localização
-  _requestPermission() async {
+  _solicitarPermissao() async {
     var status = await Permission.location.request();
     if (status.isGranted) {
       print("Concluído");

@@ -1,11 +1,11 @@
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:spymap/servicos/authService.dart';
+import 'package:spymap/servicos/servicoAutenticacao.dart';
 
 // Tela de Login é um StatefulWidget
 class TelaLogin extends StatefulWidget {
-  const TelaLogin({super.key});
+  const TelaLogin({Key? key});
 
   @override
   State<TelaLogin> createState() => _TelaLoginState();
@@ -16,57 +16,57 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
   // Chave global para o formulário
   final formKey = GlobalKey<FormState>();
   // Controladores para os campos de email e senha
-  final email = TextEditingController();
-  final senha = TextEditingController();
+  final controladorEmail = TextEditingController();
+  final controladorSenha = TextEditingController();
 
   // Variáveis para controlar o estado da tela
-  bool isLogin = true;
+  bool estaFazendoLogin = true;
   late String titulo;
-  late String actionButton;
-  late String toggleButton;
-  bool loading = false;
+  late String rotuloBotaoAcao;
+  late String rotuloBotaoAlternar;
+  bool carregando = false;
 
   @override
   void initState() {
     super.initState();
-    setFormAction(true);
+    configurarAcaoFormulario(true);
   }
 
   // Método para configurar as variáveis de acordo com o modo de ação (Login ou Registro)
-  setFormAction(bool acao) {
+  configurarAcaoFormulario(bool acao) {
     setState(() {
-      isLogin = acao;
-      if (isLogin) {
+      estaFazendoLogin = acao;
+      if (estaFazendoLogin) {
         titulo = "Bem Vindo ao SpyMap";
-        actionButton = "Login";
-        toggleButton = "Ainda não tem conta? Cadastre-se agora";
+        rotuloBotaoAcao = "Login";
+        rotuloBotaoAlternar = "Ainda não tem conta? Cadastre-se agora";
       } else {
         titulo = "Crie sua conta";
-        actionButton = "Cadastrar";
-        toggleButton = "Voltar ao Login.";
+        rotuloBotaoAcao = "Cadastrar";
+        rotuloBotaoAlternar = "Voltar ao Login.";
       }
     });
   }
 
   // Método para realizar o login
-  login() async {
-    setState(() => loading = true);
+  fazerLogin() async {
+    setState(() => carregando = true);
     try {
-      await context.read<AuthService>().login(email.text, senha.text);
-    } on AuthException catch (e) {
-      setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      await context.read<ServicoAutenticacao>().realizarLogin(controladorEmail.text, controladorSenha.text);
+    } on ExcecaoAutenticacao catch (e) {
+      setState(() => carregando = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
     }
   }
 
   // Método para realizar o registro
   registrar() async {
-    setState(() => loading = true);
+    setState(() => carregando = true);
     try {
-      await context.read<AuthService>().registrar(email.text, senha.text);
-    } on AuthException catch (e) {
-      setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      await context.read<ServicoAutenticacao>().registrar(controladorEmail.text, controladorSenha.text);
+    } on ExcecaoAutenticacao catch (e) {
+      setState(() => carregando = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
     }
   }
 
@@ -74,7 +74,7 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(146, 105, 29, 236), 
+      backgroundColor: Color.fromARGB(146, 105, 29, 236),
       body: AnimatedBackground(
         behaviour: RandomParticleBehaviour(
           options: ParticleOptions(
@@ -110,7 +110,7 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                     Padding(
                       padding: EdgeInsets.all(25),
                       child: TextFormField(
-                        controller: email,
+                        controller: controladorEmail,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.amber),
@@ -123,10 +123,10 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                         ),
                         style: TextStyle(color: Colors.amber),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          String pattern = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-                          RegExp regex = RegExp(pattern);
-                          if (!regex.hasMatch(value!))
+                        validator: (valor) {
+                          String padrao = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                          RegExp regex = RegExp(padrao);
+                          if (!regex.hasMatch(valor!))
                             return 'Insira um email válido';
                           else
                             return null;
@@ -137,7 +137,7 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 25),
                       child: TextFormField(
-                        controller: senha,
+                        controller: controladorSenha,
                         obscureText: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
@@ -151,10 +151,10 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                         ),
                         style: TextStyle(color: Colors.amber),
                         keyboardType: TextInputType.visiblePassword,
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'informe sua senha!';
-                          } else if (value.length < 8) {
+                        validator: (valor) {
+                          if (valor!.isEmpty) {
+                            return 'Informe sua senha!';
+                          } else if (valor.length < 8) {
                             return 'Sua senha deve conter no mínimo 8 caracteres';
                           }
                           return null;
@@ -167,8 +167,8 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                       child: ElevatedButton(
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
-                            if (isLogin) {
-                              login();
+                            if (estaFazendoLogin) {
+                              fazerLogin();
                             } else {
                               registrar();
                             }
@@ -176,7 +176,7 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: (loading)
+                          children: (carregando)
                               ? [
                                   Padding(
                                     padding: EdgeInsets.all(16),
@@ -194,7 +194,7 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                                   Padding(
                                     padding: EdgeInsets.all(17),
                                     child: Text(
-                                      actionButton,
+                                      rotuloBotaoAcao,
                                       style: TextStyle(fontSize: 20),
                                     ),
                                   )
@@ -204,8 +204,8 @@ class _TelaLoginState extends State<TelaLogin> with TickerProviderStateMixin {
                     ),
                     // Botão para alternar entre Login e Registro
                     TextButton(
-                      onPressed: () => setFormAction(!isLogin),
-                      child: Text(toggleButton),
+                      onPressed: () => configurarAcaoFormulario(!estaFazendoLogin),
+                      child: Text(rotuloBotaoAlternar),
                     ),
                   ],
                 ),
