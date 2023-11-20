@@ -42,7 +42,7 @@ class _PaginaMapaState extends State<PaginaMapa> {
         });
       } else {
         // Carrega o ícone padrão se 'marcador' for nulo
-        carregarIconeCustomizado('images/pontoazul.png', 250).then((iconeCustomizadoCarregado) {
+        carregarIconeCustomizado('images/pontoazul.png', 300).then((iconeCustomizadoCarregado) {
           setState(() {
             iconeCustomizado = iconeCustomizadoCarregado;
           });

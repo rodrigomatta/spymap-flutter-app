@@ -32,7 +32,10 @@ class _PaginaInicialState extends State<PaginaInicial> {
     telas = [
       PaginaLocalizacao(),
       Container(), // Espaço reservado para a PaginaMapa
-      paginaConfiguracao(alterarCor: alterarCor),
+      paginaConfiguracao(
+        alterarCor: alterarCor,
+        corTema: corAppBar, // Passe a cor do tema
+      )
     ];
     _inscricao = FirebaseFirestore.instance.collection(FirebaseAuth.instance.currentUser!.uid).snapshots().listen(_atualizarEstado);
 
@@ -110,7 +113,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
     return Scaffold(
       // Barra superior
       appBar: AppBar(
-        title: Text('SpyMap Rastreador'),
+        title: Text('SpyMap Tracker'),
         centerTitle: true, // Centraliza o título
         backgroundColor: corAppBar, // Altera a cor de fundo para verde
       ),

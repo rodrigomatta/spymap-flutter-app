@@ -11,8 +11,16 @@ class paginaConfiguracao extends StatefulWidget {
   final Function(String)? alterarCor;
   final Function(String, int)? alterarIcone;
 
+  // Adicione um novo parâmetro para a cor do tema
+  final Color corTema;
+
   // Construtor da classe
-  const paginaConfiguracao({Key? key, this.alterarCor, this.alterarIcone}) : super(key: key);
+  const paginaConfiguracao({
+    Key? key,
+    this.alterarCor,
+    this.alterarIcone,
+    required this.corTema,
+  }) : super(key: key);
 
   @override
   State<paginaConfiguracao> createState() => _paginaConfiguracaoState();
@@ -34,7 +42,7 @@ class _paginaConfiguracaoState extends State<paginaConfiguracao> with SingleTick
   final List<String> listaPontos = <String>[
     'images/spy.png',
     'images/pontoazul.png',
-    'images/pontovermelho.jpg',
+    'images/pontovermelho.png',
     'images/nicolascage.png',
   ];
   // Valor atual do ícone personalizado
@@ -160,7 +168,7 @@ class _paginaConfiguracaoState extends State<paginaConfiguracao> with SingleTick
             // Botão para sair da conta
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: Colors.black,
+                primary: widget.corTema, // Use a cor do tema recebida
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

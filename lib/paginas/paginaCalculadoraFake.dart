@@ -91,7 +91,7 @@ class _PaginaCalculadoraFalsaState extends State<PaginaCalculadoraFalsa> {
     return Scaffold(
       // Barra de aplicativo
       appBar: AppBar(
-        title: Text('Calculadora Falsa'),
+        title: Text('Calculadora'),
         backgroundColor: const Color(0xFF283637),
       ),
       // Cor de fundo da tela

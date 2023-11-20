@@ -72,7 +72,7 @@ flutter:
   assets:
     - images/spy.png
     - images/pontoazul.png
-    - images/pontovermelho.jpg
+    - images/pontovermelho.png
     - images/nicolascage.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
